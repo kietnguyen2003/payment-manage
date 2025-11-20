@@ -33,5 +33,15 @@ export const TransactionService = {
     const transactions = await this.getAll();
     const updatedList = transactions.filter(t => t.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+  },
+
+  async convertAll(convertFn: (amount: number) => number): Promise<void> {
+     await delay(500);
+     const transactions = await this.getAll();
+     const updatedList = transactions.map(t => ({
+       ...t,
+       amount: convertFn(t.amount)
+     }));
+     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
   }
 };

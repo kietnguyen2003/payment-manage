@@ -10,13 +10,17 @@ import {
   Wallet,
   Trash2
 } from './components/Icons';
+import { ArrowRightLeft, Settings as SettingsIcon } from 'lucide-react';
 import { SmartAdd } from './components/SmartAdd';
 import { StatCard } from './components/StatCard';
 import { Insights } from './components/Insights';
+import { CurrencyConverter } from './components/CurrencyConverter';
+import { Settings } from './components/Settings';
 import { Transaction, AppView, TransactionType } from './types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { formatCurrency } from './utils';
 import { TransactionService } from './services/transactionService';
+import { SettingsService } from './services/settingsService';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1'];
 
@@ -24,16 +28,18 @@ function App() {
   const [view, setView] = useState<AppView>(AppView.DASHBOARD);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currency, setCurrency] = useState<string>('VND');
 
-  // Load data on mount from Backend Service
+  // Load data and settings on mount
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
         const data = await TransactionService.getAll();
         setTransactions(data);
+        setCurrency(SettingsService.getCurrency());
       } catch (e) {
-        console.error("Failed to load transactions", e);
+        console.error("Failed to load data", e);
       } finally {
         setIsLoading(false);
       }
@@ -50,6 +56,10 @@ function App() {
   const deleteTransaction = async (id: string) => {
     await TransactionService.delete(id);
     setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrency(newCurrency);
   };
 
   // Statistics
@@ -86,6 +96,12 @@ function App() {
       
       case AppView.INSIGHTS:
         return <Insights transactions={transactions} />;
+
+      case AppView.CONVERTER:
+        return <CurrencyConverter />;
+
+      case AppView.SETTINGS:
+        return <Settings onCurrencyChange={handleCurrencyChange} />;
       
       case AppView.TRANSACTIONS:
         return (
@@ -119,7 +135,7 @@ function App() {
                           </span>
                         </td>
                         <td className={`px-6 py-4 text-right font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-slate-800'}`}>
-                          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, currency)}
                         </td>
                         <td className="px-6 py-4 text-center">
                           <button 
@@ -149,18 +165,21 @@ function App() {
                 amount={balance} 
                 icon={<Wallet className="w-6 h-6 text-indigo-600" />} 
                 colorClass="bg-indigo-50"
+                currency={currency}
               />
               <StatCard 
                 title="Tổng thu nhập" 
                 amount={totalIncome} 
                 icon={<TrendingUp className="w-6 h-6 text-emerald-600" />} 
                 colorClass="bg-emerald-50"
+                currency={currency}
               />
               <StatCard 
                 title="Tổng chi tiêu" 
                 amount={totalExpense} 
                 icon={<TrendingDown className="w-6 h-6 text-red-600" />} 
                 colorClass="bg-red-50"
+                currency={currency}
               />
             </div>
 
@@ -187,7 +206,7 @@ function App() {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
@@ -215,7 +234,7 @@ function App() {
                         </div>
                       </div>
                       <span className={`font-bold text-sm ${t.type === 'income' ? 'text-emerald-600' : 'text-slate-700'}`}>
-                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, currency)}
                       </span>
                     </div>
                   ))}
@@ -261,10 +280,23 @@ function App() {
             label="Lịch sử" 
           />
           <NavButton 
+            active={view === AppView.CONVERTER} 
+            onClick={() => setView(AppView.CONVERTER)} 
+            icon={<ArrowRightLeft className="w-5 h-5" />} 
+            label="Chuyển đổi" 
+          />
+          <NavButton 
             active={view === AppView.INSIGHTS} 
             onClick={() => setView(AppView.INSIGHTS)} 
             icon={<Sparkles className="w-5 h-5" />} 
             label="Góc nhìn AI" 
+          />
+          <div className="md:flex-1"></div>
+          <NavButton 
+            active={view === AppView.SETTINGS} 
+            onClick={() => setView(AppView.SETTINGS)} 
+            icon={<SettingsIcon className="w-5 h-5" />} 
+            label="Cài đặt" 
           />
         </nav>
       </aside>
@@ -277,7 +309,9 @@ function App() {
               {view === AppView.DASHBOARD && 'Bảng điều khiển'}
               {view === AppView.ADD && 'Thêm Giao Dịch'}
               {view === AppView.TRANSACTIONS && 'Lịch Sử Giao Dịch'}
+              {view === AppView.CONVERTER && 'Chuyển Đổi Tiền Tệ'}
               {view === AppView.INSIGHTS && 'Góc Nhìn Tài Chính AI'}
+              {view === AppView.SETTINGS && 'Cài Đặt Ứng Dụng'}
             </h1>
             <p className="text-slate-500 text-sm">Quản lý tài chính hàng ngày</p>
           </div>
