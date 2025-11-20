@@ -3,12 +3,12 @@
   "name": "KitPayment Quản lý tài chính",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2910/2910795.png",
+      "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2910/2910795.png",
+      "src": "/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     }
