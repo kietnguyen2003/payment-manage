@@ -11,7 +11,9 @@ import {
   Calendar,
   Tag,
   ArrowRight,
-  Trash2
+  Trash2,
+  BarChart3,
+  X
 } from 'lucide-react';
 
 export {
@@ -26,5 +28,7 @@ export {
   Calendar,
   Tag,
   ArrowRight,
-  Trash2
+  Trash2,
+  BarChart3,
+  X
 };

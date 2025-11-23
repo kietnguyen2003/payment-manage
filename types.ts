@@ -16,7 +16,8 @@ export enum AppView {
   ADD = 'ADD',
   INSIGHTS = 'INSIGHTS',
   CONVERTER = 'CONVERTER',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  STATS = 'STATS'
 }
 
 export const CATEGORIES = [

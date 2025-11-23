@@ -3,20 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   List, 
-  Sparkles, 
   PlusCircle, 
   TrendingUp, 
   TrendingDown, 
   Wallet,
-  Trash2
+  Trash2,
+  BarChart3,
+  X
 } from './components/Icons';
 import { ArrowRightLeft, Settings as SettingsIcon } from 'lucide-react';
 import { SmartAdd } from './components/SmartAdd';
 import { StatCard } from './components/StatCard';
-import { Insights } from './components/Insights';
+import { WeeklyStats } from './components/WeeklyStats';
 import { CurrencyConverter } from './components/CurrencyConverter';
 import { Settings } from './components/Settings';
-import { Transaction, AppView, TransactionType } from './types';
+import { Transaction, AppView, TransactionType, CATEGORIES } from './types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { formatCurrency } from './utils';
 import { TransactionService } from './services/transactionService';
@@ -29,6 +30,10 @@ function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currency, setCurrency] = useState<string>('VND');
+
+  // Transaction Filters
+  const [filterDate, setFilterDate] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
 
   // Load data and settings on mount
   useEffect(() => {
@@ -71,6 +76,11 @@ function App() {
     setCurrency(newCurrency);
   };
 
+  const clearFilters = () => {
+    setFilterDate('');
+    setFilterCategory('');
+  };
+
   // Statistics
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
   const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
@@ -89,6 +99,13 @@ function App() {
     value: expensesByCategory[key]
   }));
 
+  // Filtered Transactions
+  const filteredTransactions = transactions.filter(t => {
+    const matchDate = filterDate ? t.date === filterDate : true;
+    const matchCategory = filterCategory ? t.category === filterCategory : true;
+    return matchDate && matchCategory;
+  });
+
   // Render Views
   const renderView = () => {
     if (isLoading) {
@@ -103,62 +120,98 @@ function App() {
       case AppView.ADD:
         return <SmartAdd onAdd={addTransaction} />;
       
-      case AppView.INSIGHTS:
-        return <Insights transactions={transactions} />;
-
       case AppView.CONVERTER:
         return <CurrencyConverter />;
+      
+      case AppView.STATS:
+        return <WeeklyStats transactions={transactions} currency={currency} />;
 
       case AppView.SETTINGS:
         return <Settings onCurrencyChange={handleCurrencyChange} />;
       
       case AppView.TRANSACTIONS:
         return (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
-                  <tr>
-                    <th className="px-6 py-4">Ngày</th>
-                    <th className="px-6 py-4">Nội dung</th>
-                    <th className="px-6 py-4">Danh mục</th>
-                    <th className="px-6 py-4 text-right">Số tiền</th>
-                    <th className="px-6 py-4 text-center">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {transactions.length === 0 ? (
+          <div className="space-y-4">
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-500">Lọc theo:</span>
+                <input 
+                  type="date" 
+                  value={filterDate} 
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                 <select 
+                    value={filterCategory} 
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600 bg-white"
+                 >
+                    <option value="">Tất cả danh mục</option>
+                    {CATEGORIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                    ))}
+                 </select>
+              </div>
+              
+              {(filterDate || filterCategory) && (
+                <button 
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 font-medium px-3 py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors ml-auto"
+                >
+                  <X className="w-4 h-4" /> Xóa bộ lọc
+                </button>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-slate-600">
+                  <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
-                        Chưa có giao dịch nào. Hãy thêm mới!
-                      </td>
+                      <th className="px-6 py-4">Ngày</th>
+                      <th className="px-6 py-4">Nội dung</th>
+                      <th className="px-6 py-4">Danh mục</th>
+                      <th className="px-6 py-4 text-right">Số tiền</th>
+                      <th className="px-6 py-4 text-center">Thao tác</th>
                     </tr>
-                  ) : (
-                    transactions.map(t => (
-                      <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">{t.date}</td>
-                        <td className="px-6 py-4 font-medium text-slate-800">{t.description}</td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                            {t.category}
-                          </span>
-                        </td>
-                        <td className={`px-6 py-4 text-right font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-slate-800'}`}>
-                          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, currency)}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <button 
-                            onClick={() => deleteTransaction(t.id)}
-                            className="text-slate-400 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                          {transactions.length === 0 ? 'Chưa có giao dịch nào.' : 'Không tìm thấy giao dịch phù hợp với bộ lọc.'}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredTransactions.map(t => (
+                        <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">{t.date}</td>
+                          <td className="px-6 py-4 font-medium text-slate-800">{t.description}</td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                              {t.category}
+                            </span>
+                          </td>
+                          <td className={`px-6 py-4 text-right font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-slate-800'}`}>
+                            {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, currency)}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button 
+                              onClick={() => deleteTransaction(t.id)}
+                              className="text-slate-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         );
@@ -264,7 +317,7 @@ function App() {
       <aside className="w-full md:w-20 lg:w-64 bg-white border-r border-slate-200 flex flex-col sticky top-0 z-20">
         <div className="h-16 flex items-center justify-center border-b border-slate-100">
           <div className="flex items-center gap-2 px-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
               <img src="/icon-192.png" alt="KitPayment Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-slate-800 hidden lg:block">KitPayment</span>
@@ -291,16 +344,16 @@ function App() {
             label="Lịch sử" 
           />
           <NavButton 
+            active={view === AppView.STATS} 
+            onClick={() => setView(AppView.STATS)} 
+            icon={<BarChart3 className="w-5 h-5" />} 
+            label="Thống kê" 
+          />
+          <NavButton 
             active={view === AppView.CONVERTER} 
             onClick={() => setView(AppView.CONVERTER)} 
             icon={<ArrowRightLeft className="w-5 h-5" />} 
             label="Chuyển đổi" 
-          />
-          <NavButton 
-            active={view === AppView.INSIGHTS} 
-            onClick={() => setView(AppView.INSIGHTS)} 
-            icon={<Sparkles className="w-5 h-5" />} 
-            label="Góc nhìn AI" 
           />
           <div className="md:flex-1"></div>
           <NavButton 
@@ -321,7 +374,7 @@ function App() {
               {view === AppView.ADD && 'Thêm Giao Dịch'}
               {view === AppView.TRANSACTIONS && 'Lịch Sử Giao Dịch'}
               {view === AppView.CONVERTER && 'Chuyển Đổi Tiền Tệ'}
-              {view === AppView.INSIGHTS && 'Góc Nhìn Tài Chính AI'}
+              {view === AppView.STATS && 'Thống Kê Theo Tuần'}
               {view === AppView.SETTINGS && 'Cài Đặt Ứng Dụng'}
             </h1>
             <p className="text-slate-500 text-sm">Quản lý tài chính hàng ngày</p>
