@@ -264,7 +264,9 @@ function App() {
       <aside className="w-full md:w-20 lg:w-64 bg-white border-r border-slate-200 flex flex-col sticky top-0 z-20">
         <div className="h-16 flex items-center justify-center border-b border-slate-100">
           <div className="flex items-center gap-2 px-4">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">G</div>
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
+              <img src="/icon-192.png" alt="KitPayment Logo" className="w-full h-full object-cover" />
+            </div>
             <span className="font-bold text-slate-800 hidden lg:block">KitPayment</span>
           </div>
         </div>
