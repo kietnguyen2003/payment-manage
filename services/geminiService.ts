@@ -3,18 +3,23 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Transaction, CATEGORIES } from "../types";
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey= process.env.MY_API_KEY 
+if (!apiKey) {                                                     
+ console.warn("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your .env file.");                            
+} 
+
+const ai = new GoogleGenAI({ apiKey: apiKey });
 
 const MODEL_NAME = "gemini-2.5-flash";
 
 /**
  * Parses natural language input into a structured transaction object.
  */
-export const parseTransactionInput = async (input: string): Promise<Partial<Transaction>> => {
+export const parseTransactionInput = async (input: string): Promise<Partial<Transaction>[]> => {
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `Extract transaction details from this Vietnamese text: "${input}". 
+      contents: `Extract a list of transaction details from this Vietnamese text: "${input}". 
       Today is ${new Date().toISOString().split('T')[0]}.
       
       Specific Rules for Vietnam Context:
@@ -26,25 +31,31 @@ export const parseTransactionInput = async (input: string): Promise<Partial<Tran
          - Return the amount as a pure number (e.g. 50000).
       3. If the text implies income (e.g., "nhận lương", "bán được", "được chuyển khoản"), set type to 'income', otherwise 'expense'.
       4. Description should be short and clear in Vietnamese.
+      5. Split multiple distinct actions into separate transactions.
       `,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            amount: { type: Type.NUMBER },
-            description: { type: Type.STRING },
-            category: { type: Type.STRING },
-            date: { type: Type.STRING, description: "YYYY-MM-DD format" },
-            type: { type: Type.STRING, enum: ["income", "expense"] }
-          },
-          required: ["amount", "description", "type"]
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              amount: { type: Type.NUMBER },
+              description: { type: Type.STRING },
+              category: { type: Type.STRING },
+              date: { type: Type.STRING, description: "YYYY-MM-DD format" },
+              type: { type: Type.STRING, enum: ["income", "expense"] }
+            },
+            required: ["amount", "description", "type"]
+          }
         }
       }
     });
 
     if (response.text) {
-      return JSON.parse(response.text);
+      const parsed = JSON.parse(response.text);
+      // Ensure we always return an array
+      return Array.isArray(parsed) ? parsed : [parsed];
     }
     throw new Error("No response text");
   } catch (error) {

@@ -47,9 +47,18 @@ function App() {
     loadData();
   }, []);
 
-  const addTransaction = async (t: Omit<Transaction, 'id'>) => {
-    const newTrans = await TransactionService.add(t);
-    setTransactions(prev => [newTrans, ...prev]);
+  const addTransaction = async (t: Omit<Transaction, 'id'> | Omit<Transaction, 'id'>[]) => {
+    if (Array.isArray(t)) {
+      const newTransactions: Transaction[] = [];
+      for (const item of t) {
+        const newTrans = await TransactionService.add(item);
+        newTransactions.push(newTrans);
+      }
+      setTransactions(prev => [...newTransactions, ...prev]);
+    } else {
+      const newTrans = await TransactionService.add(t);
+      setTransactions(prev => [newTrans, ...prev]);
+    }
     setView(AppView.DASHBOARD);
   };
 
