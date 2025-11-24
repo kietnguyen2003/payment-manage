@@ -3,10 +3,10 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Transaction, CATEGORIES } from "../types";
 
 // Initialize Gemini
-const apiKey= process.env.MY_API_KEY;
-if (!apiKey) {                                                     
- console.warn("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your .env file.");                            
-} 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey) {
+ console.warn("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your .env file.");
+}
 
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
