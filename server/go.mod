@@ -1,6 +1,6 @@
 module finance-server
 
-go 1.25.3
+go 1.23.0
 
 require (
 	github.com/gin-contrib/cors v1.7.6
