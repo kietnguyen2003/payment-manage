@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ func main() {
 
 	// Setup CORS
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true // In production, restrict this to your frontend domain
+	config.AllowOrigins = []string{"https://kit-payment.vercel.app"}
 	config.AllowMethods = []string{"GET", "POST", "DELETE", "OPTIONS"}
 	r.Use(cors.New(config))
 
@@ -31,8 +32,13 @@ func main() {
 		api.DELETE("/transactions/:id", deleteTransaction)
 	}
 
-	log.Println("Server running on http://localhost:8080")
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server running on port %s", port)
+	r.Run(":" + port)
 }
 
 func getTransactions(c *gin.Context) {
