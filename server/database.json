@@ -1,0 +1,18 @@
+[
+  {
+    "id": "53da863b-911f-4de2-a2f9-68077f4a2758",
+    "amount": 100000,
+    "description": "ăn trưa",
+    "category": "Ăn uống",
+    "date": "2025-11-24",
+    "type": "expense"
+  },
+  {
+    "id": "00c6bf07-0371-457a-9c08-269bc7722efc",
+    "amount": 50000,
+    "description": "ăn sáng",
+    "category": "Ăn uống",
+    "date": "2025-11-24",
+    "type": "expense"
+  }
+]
