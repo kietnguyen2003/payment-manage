@@ -1,7 +1,7 @@
 
 import { Transaction } from "../types";
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://payment-manage.onrender.com/api';
 
 export const TransactionService = {
   async getAll(): Promise<Transaction[]> {
